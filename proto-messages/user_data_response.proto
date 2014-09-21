@@ -1,0 +1,12 @@
+package funkypanda;
+
+import "server_status.proto";
+import "user_object.proto";
+
+option java_package = "funkypanda.proto";
+option java_outer_classname = "UserDataResponseProtos";
+
+message UserDataResponse {
+	required ServerStatus serverStatus = 1;
+	optional UserObject userData = 2;
+}

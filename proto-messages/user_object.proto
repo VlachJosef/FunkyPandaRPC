@@ -1,0 +1,9 @@
+package funkypanda;
+
+option java_package = "funkypanda.proto";
+option java_outer_classname = "UserObjectProtos";
+
+message UserObject {
+	required int32 birthYear= 1;
+	required string userName = 2;
+}
