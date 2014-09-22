@@ -20,7 +20,7 @@ class UserServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
     .setUserName("vlach")
     .setBirthYear(1981)
 
-  "UserService.saveUser method " should "persist user object and return server status" in {
+  "UserService.saveUser method" should "persist user object and return server status" in {
     val response = UserService.saveUser(userObject.build().toByteArray())
 
     val statusObj = ServerStatus.parseFrom(new ByteArrayInputStream(response))
@@ -34,7 +34,7 @@ class UserServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
     statusObj.getStatus() should be("Error: User vlach already exists")
   }
 
-  "UserService.findUser method " should "return server status and optional user object" in {
+  "UserService.findUser method" should "return server status and optional user object" in {
     val userId = UserId.newBuilder().setUserID(1)
     val response = UserService.findUser(userId.build().toByteArray())
 
@@ -47,7 +47,7 @@ class UserServiceSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
     userObj.getBirthYear() should be(1981)
     userObj.getUserName() should be("vlach")
   }
- 
+
   it should "return error status and no user object, when user doesn't exists" in {
     val userId = UserId.newBuilder().setUserID(-1)
     val response = UserService.findUser(userId.build().toByteArray())

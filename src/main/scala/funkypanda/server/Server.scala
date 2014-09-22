@@ -5,33 +5,48 @@ import unfiltered.response._
 import unfiltered.directives._
 import unfiltered.directives.Directives._
 import funkypanda.service.UserService
+import funkypanda.Settings
+import com.typesafe.scalalogging.LazyLogging
 
-class UserRPC extends unfiltered.filter.Plan {
+class UserRPC extends unfiltered.filter.Plan with LazyLogging {
 
   def intent = Directive.Intent {
 
+    case GET(Path("/")) => {
+      success(Ok ~> ResponseString("FunkyPanda RPC server"))
+    }
+
+    /* Only for testing purposes */
     case GET(Path("/flushDB")) => {
       val response = UserService.flushDB
       success(Ok ~> ResponseString(response))
     }
 
     case req @ POST(Path("/saveUser")) => {
+      logger.debug("saveUser>>")
       val userObject = Body.bytes(req)
       val response = UserService.saveUser(userObject)
-      success(Ok ~> ResponseHeader("Content-Type", Set("application/octet-stream")) ~> ResponseBytes(response))
+      logger.debug("saveUser<<")
+      returnProtoBuf(response)
     }
 
     case req @ POST(Path("/findUser")) => {
+      logger.debug("findUser>>")
       val userId = Body.bytes(req)
       val response = UserService.findUser(userId)
-      success(Ok ~> ResponseHeader("Content-Type", Set("application/octet-stream")) ~> ResponseBytes(response))
+      logger.debug("findUser<<")
+      returnProtoBuf(response)
     }
+  }
+
+  private def returnProtoBuf(response: Array[Byte]) = {
+    success(Ok ~> ResponseHeader("Content-Type", Set("application/octet-stream")) ~> ResponseBytes(response))
   }
 }
 
 /** embedded server */
 object Server {
   def main(args: Array[String]) {
-    unfiltered.jetty.Server.local(8080).plan(new UserRPC).run
+    unfiltered.jetty.Server.http(port = Settings.server.port).plan(new UserRPC).run
   }
 }

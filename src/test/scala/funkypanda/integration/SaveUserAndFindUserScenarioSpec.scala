@@ -11,7 +11,13 @@ import funkypanda.proto.ServerStatusProtos.ServerStatus
 import funkypanda.proto.UserObjectProtos.UserObject
 import funkypanda.proto.UserIdProtos.UserId
 import funkypanda.proto.UserDataResponseProtos.UserDataResponse
+import funkypanda.Settings
 
+/* Beware! This integration test doesn't work correctly. Scala test
+ * haven't support for dispatch.Future so the test will always run as
+ * successful. The test is successful only when after its end follows
+ * output from println beginnig with 'Person saved:', see the last
+ * expression in this test.*/
 class SaveUserAndFindUserScenario extends FlatSpec with Matchers {
 
   val userObject = UserObject.newBuilder()
@@ -25,9 +31,14 @@ class SaveUserAndFindUserScenario extends FlatSpec with Matchers {
     val payload = userObject.build().toByteArray()
     val findUserPayload = userId.build().toByteArray()
 
-    val flushDBReq = url("http://127.0.0.1:8080/flushDB")
-    val saveUserReq = url("http://127.0.0.1:8080/saveUser")
-    val findUserReq = url("http://127.0.0.1:8080/findUser")
+    //val hostname = "funkypandaloadbalancer-425762762.eu-west-1.elb.amazonaws.com"
+    val hostname = s"localhost:${Settings.server.port}"
+
+    val address = s"http://$hostname"
+
+    val flushDBReq = url(s"$address/flushDB")
+    val saveUserReq = url(s"$address/saveUser")
+    val findUserReq = url(s"$address/findUser")
 
     for (
       flushDB <- Http(flushDBReq OK as.String);

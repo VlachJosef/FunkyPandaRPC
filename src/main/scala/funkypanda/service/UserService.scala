@@ -7,10 +7,12 @@ import funkypanda.proto.ServerStatusProtos.ServerStatus
 import funkypanda.proto.UserObjectProtos.UserObject
 import funkypanda.proto.UserIdProtos.UserId
 import funkypanda.proto.UserDataResponseProtos.UserDataResponse
+import funkypanda.Settings
+import com.typesafe.scalalogging.LazyLogging
 
-object UserService {
+object UserService extends LazyLogging {
 
-  val pool = new Pool(new JedisPool(new JedisPoolConfig(), "localhost", 6379, 2000))
+  val pool = new Pool(new JedisPool(new JedisPoolConfig(), Settings.redis.host, Settings.redis.port, 2000))
 
   /**
    * For testing purposes only
@@ -23,6 +25,9 @@ object UserService {
 
   def saveUser(userObject: Array[Byte]): Array[Byte] = {
     val userObj = UserObject.parseFrom(userObject)
+
+    logger.debug(s"saveUser>>\n$userObj")
+
     val status = pool.withClient { client =>
       val userName = userObj.getUserName()
       val exists = client.exists(s"user:$userName")
@@ -39,11 +44,17 @@ object UserService {
     }
 
     val serverStatus = ServerStatus.newBuilder().setStatus(status);
+
+    logger.debug(s"saveUser<<\n$serverStatus")
+
     serverStatus.build().toByteArray()
   }
 
   def findUser(userId: Array[Byte]): Array[Byte] = {
     val userObj = UserId.parseFrom(userId)
+
+    logger.debug(s"findUser>>\n$userObj")
+
     val user = pool.withClient { client =>
       val id = userObj.getUserID()
       val userId = client.get(s"user:$id")
@@ -57,11 +68,13 @@ object UserService {
     }
 
     val status = if (user.isDefined) "OK" else s"Error: User with userId ${userObj.getUserID()} doesn't exists"
-      
+
     val serverStatus = ServerStatus.newBuilder().setStatus(status);
     val response = UserDataResponse.newBuilder().setServerStatus(serverStatus)
     if (user.isDefined) response.setUserData(user.get)
- 
+
+    logger.debug(s"findUser<<\n$response")
+
     response.build().toByteArray()
   }
 }
