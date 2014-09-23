@@ -40,7 +40,11 @@ class UserRPC extends unfiltered.filter.Plan with LazyLogging {
   }
 
   private def returnProtoBuf(response: Array[Byte]) = {
-    success(Ok ~> ResponseHeader("Content-Type", Set("application/octet-stream")) ~> ResponseBytes(response))
+    success(Ok ~>
+      ResponseHeader("Content-Type", Set("application/octet-stream")) ~>
+      ResponseHeader("Access-Control-Allow-Origin", Set("*")) ~>
+      ResponseHeader("Access-Control-Allow-Methods", Set("GET, POST, OPTIONS, PUT, PATCH, DELETE")) ~>
+      ResponseBytes(response))
   }
 }
 
