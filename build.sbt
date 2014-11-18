@@ -1,3 +1,5 @@
+import sbtprotobuf.{ProtobufPlugin=>PB}
+
 name := """FunkyPanda RPC"""
 
 version := "0.0.0.1"
@@ -27,6 +29,12 @@ resolvers := Seq(
 javacOptions ++= Seq("-encoding", "UTF8")
 
 scalacOptions ++= Seq("-feature", "-language:postfixOps")
+
+Seq(PB.protobufSettings: _*)
+
+version in PB.protobufConfig := "2.6.0"
+
+javaSource in PB.protobufConfig <<= (sourceDirectory in Compile)(_ / "generated/java")
 
 // Parse source into ASTs, perform simple desugaring
 // Can be used to find out which implicit parameters are applied

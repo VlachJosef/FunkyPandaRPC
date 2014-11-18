@@ -1,6 +1,8 @@
 #!/bin/bash
-SRC_DIR=/Users/pepa/develop-funkypanda/test/proto-messages
-DST_DIR=/Users/pepa/develop-funkypanda/test/src/main/java
+
+# Deprecated, generating classes from proto files is done by sbt-protobuf plugin
+SRC_DIR=/Users/pepa/develop-funkypanda/funkypanda-rpc/src/main/protobuf
+DST_DIR=/Users/pepa/develop-funkypanda/funkypanda-rpc/src/main/generated/java
 
 echo $SRC_DIR
 echo $DST_DIR
