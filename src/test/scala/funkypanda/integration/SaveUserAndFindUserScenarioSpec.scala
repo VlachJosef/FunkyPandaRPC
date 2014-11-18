@@ -12,13 +12,9 @@ import funkypanda.proto.UserObjectProtos.UserObject
 import funkypanda.proto.UserIdProtos.UserId
 import funkypanda.proto.UserDataResponseProtos.UserDataResponse
 import funkypanda.Settings
+import org.scalatest.concurrent.ScalaFutures
 
-/* Beware! This integration test doesn't work correctly. Scala test
- * haven't support for dispatch.Future so the test will always run as
- * successful. The test is successful only when after its end follows
- * output from println beginnig with 'Person saved:', see the last
- * expression in this test.*/
-class SaveUserAndFindUserScenario extends FlatSpec with Matchers {
+class SaveUserAndFindUserScenario extends FlatSpec with Matchers with ScalaFutures {
 
   val userObject = UserObject.newBuilder()
     .setUserName("vlach")
@@ -40,35 +36,30 @@ class SaveUserAndFindUserScenario extends FlatSpec with Matchers {
     val saveUserReq = url(s"$address/saveUser")
     val findUserReq = url(s"$address/findUser")
 
-    for (
-      flushDB <- Http(flushDBReq OK as.String);
-      findUser <- Http(findUserReq.POST.setBody(findUserPayload) OK as.Bytes);
-      saveUser <- Http(saveUserReq.POST.setBody(payload) OK as.Bytes);
-      saveUser2 <- Http(saveUserReq.POST.setBody(payload) OK as.Bytes);
-      findUser2 <- Http(findUserReq.POST.setBody(findUserPayload) OK as.Bytes)
-    ) {
+    val flushDB = Http(flushDBReq OK as.String).futureValue
+    val findUser = Http(findUserReq.POST.setBody(findUserPayload) OK as.Bytes).futureValue
+    val saveUser = Http(saveUserReq.POST.setBody(payload) OK as.Bytes).futureValue
+    val saveUser2 = Http(saveUserReq.POST.setBody(payload) OK as.Bytes).futureValue
+    val findUser2 = Http(findUserReq.POST.setBody(findUserPayload) OK as.Bytes).futureValue
 
-      flushDB should be("OK")
+    flushDB should be("OK")
 
-      val userDataResponse = UserDataResponse.parseFrom(findUser)
+    val userDataResponse = UserDataResponse.parseFrom(findUser)
 
-      userDataResponse.getServerStatus().getStatus() should be("Error: User with userId 1 doesn't exists")
-      userDataResponse.getUserData().isInitialized() should be(false)
+    userDataResponse.getServerStatus().getStatus() should be("Error: User with userId 1 doesn't exists")
+    userDataResponse.getUserData().isInitialized() should be(false)
 
-      val statusObj = ServerStatus.parseFrom(saveUser)
-      statusObj.getStatus() should be("OK")
+    val statusObj = ServerStatus.parseFrom(saveUser)
+    statusObj.getStatus() should be("OK")
 
-      val statusObj2 = ServerStatus.parseFrom(saveUser2)
-      statusObj2.getStatus() should be("Error: User vlach already exists")
+    val statusObj2 = ServerStatus.parseFrom(saveUser2)
+    statusObj2.getStatus() should be("Error: User vlach already exists")
 
-      val userDataResponse2 = UserDataResponse.parseFrom(findUser2)
+    val userDataResponse2 = UserDataResponse.parseFrom(findUser2)
 
-      userDataResponse2.getServerStatus().getStatus() should be("OK")
-      userDataResponse2.getUserData().isInitialized() should be(true)
-      userDataResponse2.getUserData().getBirthYear() should be(1981)
-      userDataResponse2.getUserData().getUserName() should be("vlach")
-
-      println(s"Person saved:\n${userDataResponse2}")
-    }
+    userDataResponse2.getServerStatus().getStatus() should be("OK")
+    userDataResponse2.getUserData().isInitialized() should be(true)
+    userDataResponse2.getUserData().getBirthYear() should be(1981)
+    userDataResponse2.getUserData().getUserName() should be("vlach")
   }
 }
